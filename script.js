@@ -6,11 +6,16 @@ const progressFill = document.getElementById("progress-fill");
 const highlightToolbar = document.getElementById("highlight-toolbar");
 const applyHighlightBtn = document.getElementById("apply-highlight");
 const clearHighlightsBtn = document.getElementById("clear-highlights");
+const highlightDrawer = document.getElementById("highlight-drawer");
+const highlightListEl = document.getElementById("highlight-list");
 
 const STAMP_HEADINGS = new Set(["RECEIVED"]);
 const STAMP_LINES = new Set(["INITIATIVE COORDINATOR", "ATTORNEY GENERAL'S OFFICE"]);
 const HIGHLIGHT_STORAGE_KEY = "billHighlights:v1";
 const HIGHLIGHT_COLOR_KEY = "billHighlightColor:v1";
+const HIGHLIGHT_SNIPPET_MAX = 140;
+
+let highlightIndexBound = false;
 
 function getHeadingId(text, slugCounts, nextFallbackId) {
   const base = slugify(text);
@@ -240,14 +245,17 @@ function renderBill(text) {
   updateProgress();
 }
 
+let progressRAFId = null;
+
 function updateProgress() {
-  if (!progressFill) {
-    return;
-  }
-  const scrollTop = contentEl.scrollTop;
-  const scrollHeight = contentEl.scrollHeight - contentEl.clientHeight;
-  const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
-  progressFill.style.width = `${Math.min(ratio * 100, 100)}%`;
+  if (!progressFill || progressRAFId) return;
+  progressRAFId = requestAnimationFrame(() => {
+    progressRAFId = null;
+    const scrollTop = contentEl.scrollTop;
+    const scrollHeight = contentEl.scrollHeight - contentEl.clientHeight;
+    const ratio = scrollHeight > 0 ? scrollTop / scrollHeight : 0;
+    progressFill.style.width = `${Math.min(ratio * 100, 100)}%`;
+  });
 }
 
 function setupTocHighlight() {
@@ -291,13 +299,24 @@ function setupTocHighlight() {
     activeId = id;
   };
 
+  // Track visible headings without forcing layout reads
+  const visibleHeadings = new Set();
+
   const observer = new IntersectionObserver(
     (entries) => {
-      const visible = entries
-        .filter((entry) => entry.isIntersecting)
-        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top);
-      if (visible.length) {
-        setActive(visible[0].target.id);
+      for (const entry of entries) {
+        if (entry.isIntersecting) {
+          visibleHeadings.add(entry.target.id);
+        } else {
+          visibleHeadings.delete(entry.target.id);
+        }
+      }
+      // Find topmost visible heading using document order (headings array is already ordered)
+      for (const heading of headings) {
+        if (visibleHeadings.has(heading.id)) {
+          setActive(heading.id);
+          break;
+        }
       }
     },
     { root: contentEl, rootMargin: "-20% 0px -70% 0px", threshold: 0 }
@@ -380,6 +399,100 @@ function createRangeFromOffsets(container, start, end) {
   return range;
 }
 
+function getHighlightSnippet(highlight) {
+  const range = createRangeFromOffsets(contentEl, highlight.start, highlight.end);
+  if (!range) {
+    return "Highlight";
+  }
+  const raw = range.toString().replace(/\s+/g, " ").trim();
+  if (!raw) {
+    return "Highlight";
+  }
+  if (raw.length <= HIGHLIGHT_SNIPPET_MAX) {
+    return raw;
+  }
+  return `${raw.slice(0, HIGHLIGHT_SNIPPET_MAX - 3)}...`;
+}
+
+function focusHighlight(id) {
+  const matches = Array.from(
+    contentEl.querySelectorAll(`.user-highlight[data-highlight-id="${id}"]`)
+  );
+  if (!matches.length) {
+    return;
+  }
+  matches[0].scrollIntoView({ behavior: "smooth", block: "center" });
+  matches.forEach((el) => el.classList.add("is-focus"));
+  window.setTimeout(() => {
+    matches.forEach((el) => el.classList.remove("is-focus"));
+  }, 1200);
+}
+
+function renderHighlightIndex(highlights) {
+  if (!highlightListEl) {
+    return;
+  }
+  highlightListEl.innerHTML = "";
+  const count = highlights.length;
+  if (highlightDrawer) {
+    const summary = highlightDrawer.querySelector("summary");
+    if (summary) {
+      summary.textContent = count ? `Highlights (${count})` : "Highlights";
+    }
+  }
+  if (!count) {
+    const empty = document.createElement("p");
+    empty.className = "highlight-empty";
+    empty.textContent = "No highlights yet.";
+    highlightListEl.appendChild(empty);
+    return;
+  }
+
+  const sorted = [...highlights].sort((a, b) => a.start - b.start);
+  sorted.forEach((highlight, index) => {
+    const item = document.createElement("button");
+    item.type = "button";
+    item.className = "highlight-item";
+    item.dataset.highlightId = highlight.id;
+    item.dataset.color = highlight.color || "gold";
+
+    const swatch = document.createElement("span");
+    swatch.className = "highlight-swatch";
+    item.appendChild(swatch);
+
+    const content = document.createElement("div");
+    const meta = document.createElement("div");
+    meta.className = "highlight-meta";
+    meta.textContent = `Highlight ${index + 1}`;
+    const snippet = document.createElement("div");
+    snippet.className = "highlight-snippet";
+    snippet.textContent = getHighlightSnippet(highlight);
+    content.appendChild(meta);
+    content.appendChild(snippet);
+    item.appendChild(content);
+
+    highlightListEl.appendChild(item);
+  });
+
+  if (!highlightIndexBound) {
+    highlightListEl.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) {
+        return;
+      }
+      const button = target.closest(".highlight-item");
+      if (!button) {
+        return;
+      }
+      const id = button.dataset.highlightId;
+      if (id) {
+        focusHighlight(id);
+      }
+    });
+    highlightIndexBound = true;
+  }
+}
+
 function wrapRangeInHighlight(range, id, color) {
   const nodes = [];
   const walker = document.createTreeWalker(
@@ -447,10 +560,24 @@ function saveHighlights(highlights) {
 
 function clearHighlightMarkup() {
   const existing = contentEl.querySelectorAll(".user-highlight");
+  if (!existing.length) return;
+
+  // Collect parent elements that will need normalization
+  const parentsToNormalize = new Set();
+
   existing.forEach((el) => {
+    if (el.parentNode) {
+      parentsToNormalize.add(el.parentNode);
+    }
     el.replaceWith(...el.childNodes);
   });
-  contentEl.normalize();
+
+  // Targeted normalize only on affected parents (not entire tree)
+  parentsToNormalize.forEach((parent) => {
+    if (parent && parent.normalize) {
+      parent.normalize();
+    }
+  });
 }
 
 function mergeHighlight(highlights, next) {
@@ -482,6 +609,7 @@ function applyHighlights(highlights) {
 function setupHighlights() {
   const highlights = loadHighlights();
   applyHighlights(highlights);
+  renderHighlightIndex(highlights);
   let currentColor = localStorage.getItem(HIGHLIGHT_COLOR_KEY) || "gold";
   let pendingRange = null;
 
@@ -564,6 +692,7 @@ function setupHighlights() {
       saveHighlights(highlights);
       clearHighlightMarkup();
       applyHighlights(highlights);
+      renderHighlightIndex(highlights);
       pendingRange = null;
       hideToolbar();
       const selection = window.getSelection();
@@ -587,14 +716,19 @@ function setupHighlights() {
       return;
     }
     const toRemove = contentEl.querySelectorAll(`.user-highlight[data-highlight-id="${id}"]`);
+    const parentsToNormalize = new Set();
     toRemove.forEach((el) => {
+      if (el.parentNode) parentsToNormalize.add(el.parentNode);
       el.replaceWith(...el.childNodes);
     });
-    contentEl.normalize();
+    parentsToNormalize.forEach((parent) => {
+      if (parent && parent.normalize) parent.normalize();
+    });
     const remaining = highlights.filter((item) => item.id !== id);
     highlights.length = 0;
     highlights.push(...remaining);
     saveHighlights(highlights);
+    renderHighlightIndex(highlights);
   });
 
   if (clearHighlightsBtn) {
@@ -602,6 +736,7 @@ function setupHighlights() {
       clearHighlightMarkup();
       highlights.length = 0;
       saveHighlights(highlights);
+      renderHighlightIndex(highlights);
       hideToolbar();
       const selection = window.getSelection();
       if (selection) {
@@ -637,25 +772,46 @@ function setupTheme() {
   const toggleBtn = document.getElementById("theme-toggle");
   if (!toggleBtn) return;
 
+  const root = document.documentElement;
+
   const getPreferredTheme = () => {
     const stored = localStorage.getItem("theme");
     if (stored) return stored;
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+    return "dark";
   };
 
-  const setTheme = (theme) => {
-    document.documentElement.setAttribute("data-theme", theme);
-    localStorage.setItem("theme", theme);
+  const setTheme = (theme, instant = false) => {
+    if (instant) {
+      // Disable transitions for instant theme switch
+      root.style.setProperty("--theme-transition-duration", "0s");
+    }
+
+    root.setAttribute("data-theme", theme);
+
+    if (instant) {
+      // Force style recalculation then re-enable transitions
+      void root.offsetHeight;
+      requestAnimationFrame(() => {
+        root.style.removeProperty("--theme-transition-duration");
+      });
+    }
+
+    // Defer localStorage write to avoid blocking
+    if (typeof requestIdleCallback !== "undefined") {
+      requestIdleCallback(() => localStorage.setItem("theme", theme));
+    } else {
+      setTimeout(() => localStorage.setItem("theme", theme), 0);
+    }
   };
 
-  // Initialize
-  setTheme(getPreferredTheme());
+  // Initialize without transition
+  setTheme(getPreferredTheme(), true);
 
-  // Toggle
+  // Toggle with instant switch
   toggleBtn.addEventListener("click", () => {
-    const current = document.documentElement.getAttribute("data-theme");
+    const current = root.getAttribute("data-theme");
     const next = current === "dark" ? "light" : "dark";
-    setTheme(next);
+    setTheme(next, true);
   });
 }
 
