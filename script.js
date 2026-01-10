@@ -646,8 +646,22 @@ function setupHighlights() {
       return;
     }
     const rect = range.getBoundingClientRect();
-    const x = rect.left + rect.width / 2 + window.scrollX;
-    const y = rect.top + window.scrollY - 48;
+
+    // Calculate position relative to viewport
+    let x = rect.left + rect.width / 2;
+    let y = rect.top - 52;
+
+    // Keep toolbar within viewport bounds
+    const toolbarWidth = highlightToolbar.offsetWidth || 200;
+    const minX = toolbarWidth / 2 + 8;
+    const maxX = window.innerWidth - toolbarWidth / 2 - 8;
+    x = Math.max(minX, Math.min(maxX, x));
+
+    // If selection is near top, show toolbar below instead
+    if (y < 60) {
+      y = rect.bottom + 8;
+    }
+
     highlightToolbar.style.transform = `translate(${x}px, ${Math.max(y, 16)}px) translate(-50%, 0)`;
     highlightToolbar.dataset.open = "true";
     highlightToolbar.setAttribute("aria-hidden", "false");
@@ -856,3 +870,29 @@ function renderLoadError(error) {
   wrapper.appendChild(input);
   contentEl.appendChild(wrapper);
 }
+
+// Mobile: Close other drawers when one opens to prevent content being hidden
+function setupMobileDrawerBehavior() {
+  if (window.innerWidth > 768) return;
+
+  document.querySelectorAll('details').forEach(details => {
+    details.addEventListener('toggle', () => {
+      if (details.open) {
+        document.querySelectorAll('details').forEach(other => {
+          if (other !== details && other.open) {
+            other.open = false;
+          }
+        });
+      }
+    });
+  });
+}
+
+// Run on load and resize
+setupMobileDrawerBehavior();
+window.addEventListener('resize', () => {
+  // Re-check on resize in case viewport changes
+  if (window.innerWidth <= 768) {
+    setupMobileDrawerBehavior();
+  }
+});
