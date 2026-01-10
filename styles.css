@@ -221,7 +221,7 @@ body {
   height: 100%;
   overflow-y: auto;
   scrollbar-width: thin;
-  scrollbar-color: var(--muted) transparent;
+  scrollbar-color: rgba(27, 76, 91, 0.35) transparent;
 }
 
 [data-theme="dark"] .toc-inner {
@@ -453,18 +453,21 @@ body {
 }
 
 .toc-inner::-webkit-scrollbar,
-.bill-content::-webkit-scrollbar {
+.bill-content::-webkit-scrollbar,
+.highlight-list::-webkit-scrollbar {
   width: 10px;
 }
 
 .toc-inner::-webkit-scrollbar-track,
-.bill-content::-webkit-scrollbar-track {
+.bill-content::-webkit-scrollbar-track,
+.highlight-list::-webkit-scrollbar-track {
   background: transparent;
   border-radius: 999px;
 }
 
 .toc-inner::-webkit-scrollbar-thumb,
-.bill-content::-webkit-scrollbar-thumb {
+.bill-content::-webkit-scrollbar-thumb,
+.highlight-list::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(27, 76, 91, 0.2), rgba(191, 93, 46, 0.35));
   border-radius: 999px;
   border: 2px solid transparent;
@@ -472,19 +475,22 @@ body {
 }
 
 .toc-inner::-webkit-scrollbar-thumb:hover,
-.bill-content::-webkit-scrollbar-thumb:hover {
+.bill-content::-webkit-scrollbar-thumb:hover,
+.highlight-list::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(27, 76, 91, 0.4), rgba(191, 93, 46, 0.55));
   background-clip: padding-box;
 }
 
 [data-theme="dark"] .toc-inner::-webkit-scrollbar-thumb,
-[data-theme="dark"] .bill-content::-webkit-scrollbar-thumb {
+[data-theme="dark"] .bill-content::-webkit-scrollbar-thumb,
+[data-theme="dark"] .highlight-list::-webkit-scrollbar-thumb {
   background: linear-gradient(180deg, rgba(117, 184, 201, 0.25), rgba(230, 157, 122, 0.4));
   background-clip: padding-box;
 }
 
 [data-theme="dark"] .toc-inner::-webkit-scrollbar-thumb:hover,
-[data-theme="dark"] .bill-content::-webkit-scrollbar-thumb:hover {
+[data-theme="dark"] .bill-content::-webkit-scrollbar-thumb:hover,
+[data-theme="dark"] .highlight-list::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, rgba(117, 184, 201, 0.45), rgba(230, 157, 122, 0.6));
   background-clip: padding-box;
 }
@@ -829,6 +835,8 @@ body {
   border-radius: 18px;
   box-shadow: var(--shadow);
   z-index: 20;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(27, 76, 91, 0.35) transparent;
 }
 
 .highlight-item {
