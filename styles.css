@@ -20,6 +20,10 @@
     0 0 0 1px rgba(27, 76, 91, 0.02);
 
   --accent-soft: rgba(191, 93, 46, 0.1);
+  --scrollbar-thumb-start: rgba(27, 76, 91, 0.2);
+  --scrollbar-thumb-end: rgba(191, 93, 46, 0.35);
+  --scrollbar-thumb-hover-start: rgba(27, 76, 91, 0.4);
+  --scrollbar-thumb-hover-end: rgba(191, 93, 46, 0.55);
   --content-max: 1120px;
   --measure: 66ch;
   --radius-card: 24px;
@@ -40,6 +44,10 @@
     0 24px 64px -8px rgba(0, 0, 0, 0.4),
     0 0 0 1px rgba(255, 255, 255, 0.05);
   --accent-soft: rgba(230, 157, 122, 0.15);
+  --scrollbar-thumb-start: rgba(117, 184, 201, 0.25);
+  --scrollbar-thumb-end: rgba(230, 157, 122, 0.4);
+  --scrollbar-thumb-hover-start: rgba(117, 184, 201, 0.45);
+  --scrollbar-thumb-hover-end: rgba(230, 157, 122, 0.6);
 }
 
 * {
@@ -474,7 +482,7 @@ body {
 .toc-inner::-webkit-scrollbar-thumb,
 .bill-content::-webkit-scrollbar-thumb,
 .highlight-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(27, 76, 91, 0.2), rgba(191, 93, 46, 0.35));
+  background: linear-gradient(180deg, var(--scrollbar-thumb-start), var(--scrollbar-thumb-end));
   border-radius: 999px;
   border: 2px solid transparent;
   background-clip: padding-box;
@@ -483,21 +491,7 @@ body {
 .toc-inner::-webkit-scrollbar-thumb:hover,
 .bill-content::-webkit-scrollbar-thumb:hover,
 .highlight-list::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(27, 76, 91, 0.4), rgba(191, 93, 46, 0.55));
-  background-clip: padding-box;
-}
-
-[data-theme="dark"] .toc-inner::-webkit-scrollbar-thumb,
-[data-theme="dark"] .bill-content::-webkit-scrollbar-thumb,
-[data-theme="dark"] .highlight-list::-webkit-scrollbar-thumb {
-  background: linear-gradient(180deg, rgba(117, 184, 201, 0.25), rgba(230, 157, 122, 0.4));
-  background-clip: padding-box;
-}
-
-[data-theme="dark"] .toc-inner::-webkit-scrollbar-thumb:hover,
-[data-theme="dark"] .bill-content::-webkit-scrollbar-thumb:hover,
-[data-theme="dark"] .highlight-list::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(180deg, rgba(117, 184, 201, 0.45), rgba(230, 157, 122, 0.6));
+  background: linear-gradient(180deg, var(--scrollbar-thumb-hover-start), var(--scrollbar-thumb-hover-end));
   background-clip: padding-box;
 }
 
