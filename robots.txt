@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://billionaire-tax.vercel.app/sitemap.xml

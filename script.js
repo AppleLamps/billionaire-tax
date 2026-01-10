@@ -616,7 +616,7 @@ function setupHighlights() {
 
 async function loadBill() {
   try {
-    const response = await fetch(billPath);
+    const response = await fetch(encodeURI(billPath));
     if (!response.ok) {
       throw new Error(`HTTP ${response.status}`);
     }
