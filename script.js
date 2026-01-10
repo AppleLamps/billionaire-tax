@@ -16,6 +16,7 @@ const HIGHLIGHT_COLOR_KEY = "billHighlightColor:v1";
 const HIGHLIGHT_SNIPPET_MAX = 140;
 
 let highlightIndexBound = false;
+let mobileDrawerBound = false;
 
 function getHeadingId(text, slugCounts, nextFallbackId) {
   const base = slugify(text);
@@ -41,6 +42,17 @@ function isStampDate(text) {
 
 function isAllCapsShort(text) {
   return /^[A-Z\s'&-]+$/.test(text) && text.length <= 40;
+}
+
+function isSafeUrl(url) {
+  if (!url || typeof url !== "string") return false;
+  const trimmed = url.trim().toLowerCase();
+  // Block dangerous protocols
+  if (trimmed.startsWith("javascript:") || trimmed.startsWith("data:") || trimmed.startsWith("vbscript:")) {
+    return false;
+  }
+  // Allow relative URLs, http, https
+  return trimmed.startsWith("http://") || trimmed.startsWith("https://") || trimmed.startsWith("/") || !trimmed.includes(":");
 }
 
 function parseBill(text) {
@@ -176,6 +188,10 @@ function renderBlocks(blocks, container, slugCounts, nextFallbackId, startOrder 
         tocList.appendChild(tocItem);
       }
     } else if (block.kind === "image") {
+      // Skip images with unsafe URLs to prevent XSS
+      if (!isSafeUrl(block.src)) {
+        continue;
+      }
       element = document.createElement("figure");
       const img = document.createElement("img");
       img.src = block.src;
@@ -540,6 +556,18 @@ function wrapRangeInHighlight(range, id, color) {
   });
 }
 
+function isValidHighlight(obj) {
+  return (
+    obj &&
+    typeof obj === "object" &&
+    typeof obj.id === "string" &&
+    typeof obj.start === "number" &&
+    typeof obj.end === "number" &&
+    obj.start >= 0 &&
+    obj.end > obj.start
+  );
+}
+
 function loadHighlights() {
   try {
     const raw = localStorage.getItem(HIGHLIGHT_STORAGE_KEY);
@@ -547,7 +575,11 @@ function loadHighlights() {
       return [];
     }
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+    // Filter out invalid highlight objects to prevent runtime errors
+    return parsed.filter(isValidHighlight);
   } catch (error) {
     console.warn("Unable to read highlights:", error);
     return [];
@@ -667,7 +699,7 @@ function setupHighlights() {
     highlightToolbar.setAttribute("aria-hidden", "false");
   };
 
-  contentEl.addEventListener("mouseup", () => {
+  const handleSelection = () => {
     const selection = window.getSelection();
     if (!selection || selection.isCollapsed) {
       pendingRange = null;
@@ -682,6 +714,15 @@ function setupHighlights() {
     }
     pendingRange = range.cloneRange();
     showToolbar(range);
+  };
+
+  // Support both mouse and keyboard selection
+  contentEl.addEventListener("mouseup", handleSelection);
+  contentEl.addEventListener("keyup", (event) => {
+    // Handle keyboard selection (Shift+Arrow keys, Ctrl+Shift+End, etc.)
+    if (event.shiftKey || event.key === "End" || event.key === "Home") {
+      handleSelection();
+    }
   });
 
   if (applyHighlightBtn) {
@@ -873,10 +914,13 @@ function renderLoadError(error) {
 
 // Mobile: Close other drawers when one opens to prevent content being hidden
 function setupMobileDrawerBehavior() {
-  if (window.innerWidth > 768) return;
+  if (mobileDrawerBound) return;
+  mobileDrawerBound = true;
 
   document.querySelectorAll('details').forEach(details => {
     details.addEventListener('toggle', () => {
+      // Only apply behavior on mobile viewports
+      if (window.innerWidth > 768) return;
       if (details.open) {
         document.querySelectorAll('details').forEach(other => {
           if (other !== details && other.open) {
@@ -888,11 +932,5 @@ function setupMobileDrawerBehavior() {
   });
 }
 
-// Run on load and resize
+// Run on load
 setupMobileDrawerBehavior();
-window.addEventListener('resize', () => {
-  // Re-check on resize in case viewport changes
-  if (window.innerWidth <= 768) {
-    setupMobileDrawerBehavior();
-  }
-});
