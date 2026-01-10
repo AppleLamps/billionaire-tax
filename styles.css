@@ -7,7 +7,8 @@
   --bg: #f4efe9;
   --bg-deep: #e6dac7;
   --ink: #2a2725;
-  --muted: #5a534e; /* Improved contrast: 4.6:1 */
+  --muted: #5a534e;
+  /* Improved contrast: 4.6:1 */
   --primary: #1b4c5b;
   --accent: #bf5d2e;
   --paper: #ffffff;
@@ -29,7 +30,8 @@
   --bg: #0f1112;
   --bg-deep: #181b1d;
   --ink: #e6e8ea;
-  --muted: #a0a5a9; /* Improved contrast: 5.8:1 */
+  --muted: #a0a5a9;
+  /* Improved contrast: 5.8:1 */
   --primary: #75b8c9;
   --accent: #e69d7a;
   --paper: #16191b;
@@ -392,6 +394,10 @@ body {
   color: var(--muted);
   padding: 12px 20px;
   min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  white-space: nowrap;
   border-radius: 999px;
   cursor: pointer;
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
@@ -613,10 +619,21 @@ body {
   border-radius: 50%;
 }
 
-.color-chip[data-color="gold"] { --chip-color: #f5d776; }
-.color-chip[data-color="mint"] { --chip-color: #b8e2c8; }
-.color-chip[data-color="sky"] { --chip-color: #b9d9f6; }
-.color-chip[data-color="rose"] { --chip-color: #f1b7c8; }
+.color-chip[data-color="gold"] {
+  --chip-color: #f5d776;
+}
+
+.color-chip[data-color="mint"] {
+  --chip-color: #b8e2c8;
+}
+
+.color-chip[data-color="sky"] {
+  --chip-color: #b9d9f6;
+}
+
+.color-chip[data-color="rose"] {
+  --chip-color: #f1b7c8;
+}
 
 .color-chip[data-active="true"] {
   border-color: var(--primary);
@@ -768,11 +785,11 @@ body {
 
 .highlight-drawer summary {
   font-family: "IBM Plex Mono", monospace;
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   letter-spacing: 0.16em;
   text-transform: uppercase;
   color: var(--muted);
-  padding: 10px 16px;
+  padding: 12px 20px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
@@ -781,7 +798,9 @@ body {
   border-radius: 999px;
   border: 1px solid var(--line);
   background: var(--bg-deep);
-  min-height: 40px;
+  min-height: 44px;
+  line-height: 1;
+  white-space: nowrap;
   box-shadow: 0 12px 24px -18px rgba(0, 0, 0, 0.45);
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
 }
@@ -893,10 +912,21 @@ body {
   text-align: center;
 }
 
-.highlight-item[data-color="gold"] .highlight-swatch { --chip-color: #f5d776; }
-.highlight-item[data-color="mint"] .highlight-swatch { --chip-color: #b8e2c8; }
-.highlight-item[data-color="sky"] .highlight-swatch { --chip-color: #b9d9f6; }
-.highlight-item[data-color="rose"] .highlight-swatch { --chip-color: #f1b7c8; }
+.highlight-item[data-color="gold"] .highlight-swatch {
+  --chip-color: #f5d776;
+}
+
+.highlight-item[data-color="mint"] .highlight-swatch {
+  --chip-color: #b8e2c8;
+}
+
+.highlight-item[data-color="sky"] .highlight-swatch {
+  --chip-color: #b9d9f6;
+}
+
+.highlight-item[data-color="rose"] .highlight-swatch {
+  --chip-color: #f1b7c8;
+}
 
 .user-highlight.is-focus {
   outline: 2px solid var(--accent);
@@ -1082,6 +1112,11 @@ body {
     font-size: 0.8rem;
   }
 
+  .highlight-drawer summary {
+    padding: 14px 24px;
+    font-size: 0.8rem;
+  }
+
   .eyebrow {
     font-size: 0.8rem;
   }
@@ -1096,6 +1131,7 @@ body {
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -1160,6 +1196,7 @@ body {
 
 /* Touch devices: suppress focus ring on tap */
 @media (hover: none) {
+
   .toc a:focus:not(:focus-visible),
   .ghost-button:focus:not(:focus-visible),
   .theme-toggle:focus:not(:focus-visible) {
