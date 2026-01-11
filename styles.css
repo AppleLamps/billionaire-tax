@@ -1399,7 +1399,9 @@ body {
     0 4px 16px rgba(191, 93, 46, 0.3),
     0 0 0 1px rgba(255, 255, 255, 0.1);
   transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
-  z-index: 400;
+  z-index: 1002;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 [data-theme="dark"] .chat-fab {
@@ -1441,7 +1443,7 @@ body {
   box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
-  z-index: 399;
+  z-index: 1003;
   opacity: 0;
   visibility: hidden;
   transform: translateY(20px) scale(0.95);
@@ -1844,5 +1846,8 @@ body {
     right: 16px;
     width: 52px;
     height: 52px;
+    z-index: 1002;
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
