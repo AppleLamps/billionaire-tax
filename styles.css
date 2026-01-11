@@ -433,6 +433,7 @@ body {
   margin: 0 auto;
   width: 100%;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding-right: 12px;
   flex: 1;
   height: 100%;
@@ -1146,6 +1147,22 @@ body {
 
 @media (max-width: 768px) {
 
+  /* Allow body to scroll on mobile */
+  body {
+    overflow: auto;
+    overflow-x: hidden;
+    height: auto;
+    min-height: 100vh;
+  }
+
+  /* Hide letter dropdown and highlight controls on mobile */
+  .letter-dropdown,
+  .bill-actions,
+  .highlight-drawer,
+  #clear-highlights {
+    display: none !important;
+  }
+
   /* Show mobile menu button */
   .mobile-menu-btn {
     display: flex;
@@ -1170,28 +1187,6 @@ body {
     grid-template-rows: minmax(0, 1fr);
     gap: 16px;
   }
-
-  .bill-actions {
-    width: 100%;
-    justify-content: flex-start;
-  }
-
-  .highlight-drawer {
-    width: 100%;
-    align-items: stretch;
-  }
-
-  .highlight-drawer summary {
-    width: 100%;
-    justify-content: space-between;
-  }
-
-  .highlight-list {
-    position: static;
-    width: 100%;
-    max-height: 35vh;
-    margin-top: 10px;
-  }
 }
 
 @media (max-width: 480px) {
@@ -1214,11 +1209,23 @@ body {
   .layout {
     gap: 16px;
     padding: 16px 4vw;
+    height: auto;
+    min-height: 0;
   }
 
   .bill {
     padding: 24px 16px;
     border-radius: 16px;
+    height: auto;
+    max-height: none;
+    overflow: visible;
+  }
+
+  .bill-content {
+    overflow-y: visible;
+    height: auto;
+    max-height: none;
+    -webkit-overflow-scrolling: touch;
   }
 
   .bill-header {
