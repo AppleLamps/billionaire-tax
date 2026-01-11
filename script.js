@@ -259,6 +259,7 @@ function renderBill(text) {
   setupTocHighlight();
   setupHighlights();
   updateProgress();
+  syncMobileToc(); // Sync mobile TOC after rendering
 }
 
 let progressRAFId = null;
@@ -276,19 +277,26 @@ function updateProgress() {
 
 function setupTocHighlight() {
   const links = Array.from(tocList.querySelectorAll("a"));
+  const mobileTocList = document.getElementById("mobile-toc-list");
+  const mobileLinks = mobileTocList ? Array.from(mobileTocList.querySelectorAll("a")) : [];
+  const allLinks = [...links, ...mobileLinks];
+
   if (!links.length) {
     return;
   }
 
   const linkById = new Map();
-  for (const link of links) {
+  for (const link of allLinks) {
     const href = link.getAttribute("href");
     if (!href || !href.startsWith("#")) {
       continue;
     }
     const id = decodeURIComponent(href.slice(1));
     if (id) {
-      linkById.set(id, link);
+      if (!linkById.has(id)) {
+        linkById.set(id, []);
+      }
+      linkById.get(id).push(link);
     }
   }
 
@@ -303,14 +311,17 @@ function setupTocHighlight() {
       return;
     }
     if (activeId && linkById.has(activeId)) {
-      const prev = linkById.get(activeId);
-      prev.classList.remove("active");
-      prev.removeAttribute("aria-current");
+      for (const prev of linkById.get(activeId)) {
+        prev.classList.remove("active");
+        prev.removeAttribute("aria-current");
+      }
     }
-    const next = linkById.get(id);
-    if (next) {
-      next.classList.add("active");
-      next.setAttribute("aria-current", "true");
+    const nextLinks = linkById.get(id);
+    if (nextLinks) {
+      for (const next of nextLinks) {
+        next.classList.add("active");
+        next.setAttribute("aria-current", "true");
+      }
     }
     activeId = id;
   };
@@ -341,7 +352,7 @@ function setupTocHighlight() {
   headings.forEach((heading) => observer.observe(heading));
   setActive(headings[0].id);
 
-  links.forEach((link) => {
+  allLinks.forEach((link) => {
     link.addEventListener("click", (event) => {
       const href = link.getAttribute("href");
       if (!href || !href.startsWith("#")) {
@@ -932,8 +943,71 @@ function setupMobileDrawerBehavior() {
   });
 }
 
+// =====================
+// Mobile Sidebar
+// =====================
+function setupMobileSidebar() {
+  const menuBtn = document.getElementById("mobile-menu-btn");
+  const sidebar = document.getElementById("mobile-sidebar");
+  const overlay = document.getElementById("mobile-sidebar-overlay");
+  const closeBtn = document.getElementById("mobile-sidebar-close");
+  const mobileTocList = document.getElementById("mobile-toc-list");
+
+  if (!menuBtn || !sidebar || !overlay || !mobileTocList) return;
+
+  const openSidebar = () => {
+    sidebar.setAttribute("aria-hidden", "false");
+    overlay.setAttribute("aria-hidden", "false");
+    menuBtn.setAttribute("aria-expanded", "true");
+    document.body.style.overflow = "hidden";
+  };
+
+  const closeSidebar = () => {
+    sidebar.setAttribute("aria-hidden", "true");
+    overlay.setAttribute("aria-hidden", "true");
+    menuBtn.setAttribute("aria-expanded", "false");
+    document.body.style.overflow = "";
+  };
+
+  menuBtn.addEventListener("click", () => {
+    const isOpen = sidebar.getAttribute("aria-hidden") === "false";
+    if (isOpen) {
+      closeSidebar();
+    } else {
+      openSidebar();
+    }
+  });
+
+  closeBtn?.addEventListener("click", closeSidebar);
+  overlay.addEventListener("click", closeSidebar);
+
+  // Close on escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && sidebar.getAttribute("aria-hidden") === "false") {
+      closeSidebar();
+    }
+  });
+
+  // Close sidebar when a link is clicked
+  mobileTocList.addEventListener("click", (e) => {
+    if (e.target.tagName === "A") {
+      closeSidebar();
+    }
+  });
+}
+
+// Sync mobile TOC with desktop TOC
+function syncMobileToc() {
+  const mobileTocList = document.getElementById("mobile-toc-list");
+  if (!mobileTocList || !tocList) return;
+
+  // Clone the desktop TOC content to mobile
+  mobileTocList.innerHTML = tocList.innerHTML;
+}
+
 // Run on load
 setupMobileDrawerBehavior();
+setupMobileSidebar();
 
 // =====================
 // Bill Chat

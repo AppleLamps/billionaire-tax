@@ -1,0 +1,7 @@
+{
+  "name": "billionaire-tax-viewer",
+  "version": "1.0.0",
+  "description": "2026 Billionaire Tax Act viewer with AI-powered chat",
+  "type": "module",
+  "private": true
+}
