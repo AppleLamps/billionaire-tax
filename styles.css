@@ -24,8 +24,8 @@
   --scrollbar-thumb-end: rgba(191, 93, 46, 0.35);
   --scrollbar-thumb-hover-start: rgba(27, 76, 91, 0.4);
   --scrollbar-thumb-hover-end: rgba(191, 93, 46, 0.55);
-  --content-max: 1120px;
-  --measure: 66ch;
+  --content-max: 1280px;
+  --measure: 72ch;
   --radius-card: 24px;
   --mono-font: "IBM Plex Mono", monospace;
 }
@@ -203,9 +203,9 @@ body {
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr);
+  grid-template-columns: minmax(260px, 1.1fr) minmax(0, 3.6fr);
   gap: 40px;
-  padding: 24px 6vw 24px;
+  padding: 24px 4vw 24px;
   max-width: var(--content-max);
   margin: 0 auto;
   height: 100%;
@@ -376,12 +376,13 @@ body {
   align-items: center;
   justify-content: space-between;
   gap: 16px;
+  margin-bottom: 12px;
 }
 
 .bill-header h2 {
   font-family: "Fraunces", serif;
   font-size: 1.8rem;
-  margin: 0 0 8px;
+  margin: 0;
 }
 
 .bill-actions {
@@ -402,12 +403,14 @@ body {
   color: var(--muted);
   padding: 12px 20px;
   min-height: 44px;
+  line-height: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   white-space: nowrap;
   border-radius: 999px;
   cursor: pointer;
+  box-shadow: 0 12px 24px -18px rgba(0, 0, 0, 0.45);
   transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 }
 
@@ -771,10 +774,6 @@ body {
 /* Highlights drawer */
 .highlight-drawer {
   position: relative;
-  display: inline-flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 10px;
 }
 
 .highlight-drawer summary {
