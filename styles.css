@@ -984,41 +984,44 @@ body {
 .mobile-menu-btn {
   display: none;
   position: fixed;
-  top: 16px;
-  left: 16px;
+  top: 10px;
+  left: 10px;
   z-index: 1001;
-  width: 44px;
-  height: 44px;
+  width: 30px;
+  height: 30px;
   border: none;
-  border-radius: 12px;
+  border-radius: 50%;
   background: linear-gradient(135deg, var(--accent), var(--primary));
   color: white;
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease, box-shadow 0.2s ease, opacity 0.2s ease;
+}
+
+.mobile-menu-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .mobile-menu-btn:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
 }
 
 .mobile-menu-btn:active {
   transform: scale(0.95);
 }
 
+/* Hide menu button when sidebar is open */
+.mobile-menu-btn[aria-expanded="true"] {
+  opacity: 0;
+  pointer-events: none;
+}
+
 .mobile-menu-btn .close-icon {
   display: none;
-}
-
-.mobile-menu-btn[aria-expanded="true"] .menu-icon {
-  display: none;
-}
-
-.mobile-menu-btn[aria-expanded="true"] .close-icon {
-  display: block;
 }
 
 /* ===== MOBILE SIDEBAR ===== */
@@ -1155,11 +1158,13 @@ body {
     min-height: 100vh;
   }
 
-  /* Hide letter dropdown and highlight controls on mobile */
+  /* Hide letter dropdown, highlight controls, and theme toggle on mobile */
   .letter-dropdown,
   .bill-actions,
   .highlight-drawer,
-  #clear-highlights {
+  #clear-highlights,
+  .theme-toggle,
+  .controls {
     display: none !important;
   }
 

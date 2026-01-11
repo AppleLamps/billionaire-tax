@@ -1182,10 +1182,11 @@ Use the bill text below as your primary evidence, and use your search tools to v
       return table;
     });
 
-    // Headers (### h3, ## h2, # h1)
-    html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
-    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
-    html = html.replace(/^# (.+)$/gm, '<h3>$1</h3>');
+    // Headers (#### h5, ### h4, ## h3, # h3) - must be at line start, order matters
+    html = html.replace(/^####\s+(.+)$/gm, '<h5>$1</h5>');
+    html = html.replace(/^###\s+(.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^##\s+(.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^#\s+(.+)$/gm, '<h3>$1</h3>');
 
     // Bold (**text** or __text__)
     html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
