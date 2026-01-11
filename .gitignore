@@ -2,7 +2,16 @@
 Thumbs.db
 *.log
 
+# Dependencies
 node_modules/
 dist/
 build/
+
+# Environment variables (contains API keys)
+.env
+.env.local
+.env.*.local
+
+# Vercel
+.vercel/
 

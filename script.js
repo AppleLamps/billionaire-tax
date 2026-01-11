@@ -587,7 +587,7 @@ function loadHighlights() {
 }
 
 function saveHighlights(highlights) {
-  localStorage.setItem(HIGHLIGHT_STORAGE_KEY, JSON.stringify(highlights));      
+  localStorage.setItem(HIGHLIGHT_STORAGE_KEY, JSON.stringify(highlights));
 }
 
 function clearHighlightMarkup() {
@@ -934,3 +934,375 @@ function setupMobileDrawerBehavior() {
 
 // Run on load
 setupMobileDrawerBehavior();
+
+// =====================
+// Bill Chat
+// =====================
+function setupBillChat() {
+  const fab = document.getElementById("chat-fab");
+  const panel = document.getElementById("chat-panel");
+  const closeBtn = document.getElementById("chat-close");
+  const form = document.getElementById("chat-form");
+  const input = document.getElementById("chat-input");
+  const messagesEl = document.getElementById("chat-messages");
+  const sendBtn = document.getElementById("chat-send");
+
+  if (!fab || !panel || !form || !input || !messagesEl) return;
+
+  // API Configuration
+  // For local testing: set your API key here (NEVER commit this to git!)
+  // For production (Vercel): leave as null, uses serverless function
+  const LOCAL_XAI_API_KEY = null; // e.g., "xai-your-key-here"
+
+  const isLocalhost = window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1" ||
+    window.location.protocol === "file:";
+
+  const CHAT_API_URL = "/api/chat";
+  const XAI_API_URL = "https://api.x.ai/v1/responses";
+
+  let conversationHistory = [];
+  let isLoading = false;
+  let billTextCache = null;
+
+  // System prompt with bill context
+  const getSystemPrompt = async () => {
+    if (!billTextCache) {
+      try {
+        const response = await fetch(encodeURI(billPath));
+        if (response.ok) {
+          billTextCache = await response.text();
+        }
+      } catch (e) {
+        console.warn("Could not load bill text for chat context");
+      }
+    }
+
+    // Context injection: The Bill Text is the primary evidence, tools are secondary support.
+    const billContext = billTextCache
+      ? `\n\n=== FULL BILL TEXT START ===\n${billTextCache}\n=== FULL BILL TEXT END ===`
+      : "";
+
+    return `You are a Constitutional Realist and Legal Analyst. You view the "2026 Billionaire Tax Act" (Initiative No. 25-0024) as a "Constitutional Trojan Horse" that fundamentally revises California's governance structure under the guise of a tax.
+
+### CORE OBJECTIVE
+Your goal is to chat with users about the bill, but you must frame every answer through the lens of strict legal scrutiny, separation of powers, and fiscal discipline. You are not neutral. You are an advocate for the structural integrity of the Constitution.
+
+### TOOL USAGE STRATEGY
+You have access to \`web_search\` and \`x_search\`. You must use them **aggressively** to support your arguments with external facts and legal precedents. Do not guess; verify.
+
+1.  **Validate Legal Theory (Web Search):**
+    * If a user questions your "Revision vs. Amendment" argument, search for *Legislature v. Weber* or *Raven v. Deukmejian*. Use the search results to explain the legal standard for a "revision" (qualitative change to government structure) and apply it to this bill.
+    * Search for "California Article XIIIB Gann Limit" to explain exactly what fiscal check this bill is bypassing.
+
+2.  **Economic Reality Checks (Web Search):**
+    * When discussing the "Economic Realism" pillar (that wealth taxes fail), search for historical examples. Look for "wealth tax repeal France Sweden capital flight" to provide concrete evidence that these policies destroy tax bases.
+    * Search for "administrative challenges of valuing unrealized assets" to support your argument that the Franchise Tax Board is being given an impossible, arbitrary task.
+
+3.  **Real-Time Context (X Search):**
+    * Use \`x_search\` to check for the latest news on the initiative's qualification status, lawsuit filings, or public statements by the proponents/opponents.
+    * Filter for relevant legal commentary to see if other scholars are raising the "Revision" objection.
+
+### ANALYTICAL PILLARS (Your Worldview)
+1.  **Revision, Not Amendment:** This bill alters the "basic plan of government." It conscripts the Judiciary (Sec. 50314) and bypasses the Legislature (Sec. 4(e)). This requires a Constitutional Convention.
+2.  **The Shadow Treasury:** It explicitly exempts revenues from the "Gann Limit" (Article XIIIB), creating an unaccountable slush fund.
+3.  **The Fourth Branch:** It suspends the Administrative Procedure Act (Sec. 50309), crowning the Franchise Tax Board as an unchecked regulatory power.
+4.  **Judicial Conscription:** It orders the Court to "reform" (rewrite) the law if found invalid. This violates separation of powers.
+
+### RESPONSE GUIDELINES
+* **Cite Sources:** If you use a tool to find a case or a fact, do NOT cite it unless explicitly asked, If you reference the bill, cite the Section number from the text below.
+* **Be Direct:** Do not say "Some might argue..." Say "The text explicitly states..."
+* **Don't Just Summarize:** If a user asks "What does the bill do?", do not just list the tax rates. Explain that it *creates a parallel fiscal system* and *suspends due process*.
+
+### FORMATTING GUIDELINES
+Your responses will be rendered with markdown. Use these features for clarity:
+
+**Headers** - Use ### for main sections, #### for subsections:
+### The Constitutional Problem
+#### Separation of Powers Violation
+
+**Bold & Italic** - Emphasize key terms:
+The bill creates a **parallel fiscal system** that is *exempt* from normal oversight.
+
+**Lists** - Use numbered lists for sequential arguments, bullets for related points:
+1. First, the bill suspends the APA.
+2. Second, it exempts revenue from the Gann Limit.
+3. Third, it conscripts the judiciary.
+
+Key constitutional violations:
+- Bypasses Legislature (Sec. 4(e))
+- Suspends due process (Sec. 50309)
+- Creates unchecked regulatory power
+
+**Blockquotes** - Quote bill text directly:
+> The Board shall have full power to administer this chapter and may prescribe all rules and regulations necessary therefor.
+
+**Inline Code** - Reference specific sections or legal terms:
+See \`Section 50314\` for the judicial reform clause. The \`Gann Limit\` under Article XIIIB is explicitly bypassed.
+
+**Tables** - Compare provisions or rates:
+| Net Worth | Tax Rate |
+|-----------|----------|
+| $1B-$2B | 1.0% |
+| $2B-$5B | 1.5% |
+| Over $5B | 2.5% |
+
+### CONTEXT:
+Use the bill text below as your primary evidence, and use your search tools to validate your interpretation.${billContext}`;
+  };
+
+  const togglePanel = (open) => {
+    const isOpen = open ?? panel.dataset.open !== "true";
+    panel.dataset.open = isOpen;
+    panel.setAttribute("aria-hidden", !isOpen);
+    fab.dataset.open = isOpen;
+    if (isOpen) {
+      input.focus();
+    }
+  };
+
+  fab.addEventListener("click", () => togglePanel());
+  closeBtn?.addEventListener("click", () => togglePanel(false));
+
+  // Close on escape key
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && panel.dataset.open === "true") {
+      togglePanel(false);
+    }
+  });
+
+  // Simple markdown parser for chat messages
+  const parseMarkdown = (text) => {
+    // Escape HTML to prevent XSS
+    const escapeHtml = (str) =>
+      str.replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+
+    let html = escapeHtml(text);
+
+    // Code blocks (```code```)
+    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+      return `<pre><code class="lang-${lang || 'text'}">${code.trim()}</code></pre>`;
+    });
+
+    // Inline code (`code`)
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+    // Tables
+    html = html.replace(/^(\|.+\|)\n(\|[-:| ]+\|)\n((?:\|.+\|\n?)+)/gm, (match, header, separator, body) => {
+      const parseRow = (row) => row.split('|').filter(cell => cell.trim()).map(cell => cell.trim());
+      const headerCells = parseRow(header);
+      const bodyRows = body.trim().split('\n').map(parseRow);
+
+      let table = '<table><thead><tr>';
+      headerCells.forEach(cell => { table += `<th>${cell}</th>`; });
+      table += '</tr></thead><tbody>';
+      bodyRows.forEach(row => {
+        table += '<tr>';
+        row.forEach(cell => { table += `<td>${cell}</td>`; });
+        table += '</tr>';
+      });
+      table += '</tbody></table>';
+      return table;
+    });
+
+    // Headers (### h3, ## h2, # h1)
+    html = html.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    html = html.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^# (.+)$/gm, '<h3>$1</h3>');
+
+    // Bold (**text** or __text__)
+    html = html.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    html = html.replace(/__(.+?)__/g, '<strong>$1</strong>');
+
+    // Italic (*text* or _text_)
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+    // Numbered lists
+    html = html.replace(/^(\d+)\. (.+)$/gm, '<li data-num="$1">$2</li>');
+    html = html.replace(/(<li data-num="\d+">.+<\/li>\n?)+/g, '<ol>$&</ol>');
+
+    // Bullet lists (- or *)
+    html = html.replace(/^[-*] (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>[^<]+<\/li>\n?)+/g, (match) => {
+      // Only wrap if not already in ol
+      if (match.includes('data-num')) return match;
+      return `<ul>${match}</ul>`;
+    });
+
+    // Blockquotes
+    html = html.replace(/^&gt; (.+)$/gm, '<blockquote>$1</blockquote>');
+    html = html.replace(/<\/blockquote>\n<blockquote>/g, '<br>');
+
+    // Links [text](url)
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+    // Paragraphs - wrap remaining text blocks
+    html = html.split('\n\n').map(block => {
+      const trimmed = block.trim();
+      if (!trimmed) return '';
+      // Don't wrap if already a block element
+      if (/^<(h[1-6]|ul|ol|pre|blockquote|table)/.test(trimmed)) {
+        return trimmed;
+      }
+      return `<p>${trimmed.replace(/\n/g, '<br>')}</p>`;
+    }).join('');
+
+    // Clean up empty paragraphs and extra whitespace
+    html = html.replace(/<p>\s*<\/p>/g, '');
+    html = html.replace(/\n/g, '');
+
+    return html;
+  };
+
+  const addMessage = (content, role, isError = false) => {
+    const msg = document.createElement("div");
+    msg.className = `chat-message ${role}${isError ? " error" : ""}`;
+
+    if (role === "assistant") {
+      msg.innerHTML = parseMarkdown(content);
+    } else {
+      msg.textContent = content;
+    }
+
+    messagesEl.appendChild(msg);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return msg;
+  };
+
+  const showTyping = () => {
+    const typing = document.createElement("div");
+    typing.className = "chat-typing";
+    typing.id = "chat-typing";
+    typing.innerHTML = `
+      <span class="chat-typing-dot"></span>
+      <span class="chat-typing-dot"></span>
+      <span class="chat-typing-dot"></span>
+    `;
+    messagesEl.appendChild(typing);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return typing;
+  };
+
+  const hideTyping = () => {
+    const typing = document.getElementById("chat-typing");
+    typing?.remove();
+  };
+
+  const setLoading = (loading) => {
+    isLoading = loading;
+    sendBtn.disabled = loading;
+    input.disabled = loading;
+  };
+
+  const sendMessage = async (userMessage) => {
+    if (!userMessage.trim() || isLoading) return;
+
+    // Add user message to UI and history
+    addMessage(userMessage, "user");
+    conversationHistory.push({ role: "user", content: userMessage });
+
+    setLoading(true);
+    showTyping();
+
+    try {
+      const systemPrompt = await getSystemPrompt();
+
+      const messages = [
+        { role: "system", content: systemPrompt },
+        ...conversationHistory,
+      ];
+
+      let assistantMessage;
+
+      // Local testing: call xAI directly (API key exposed - dev only!)
+      if (isLocalhost && LOCAL_XAI_API_KEY) {
+        const response = await fetch(XAI_API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${LOCAL_XAI_API_KEY}`,
+          },
+          body: JSON.stringify({
+            model: "grok-4-1-fast",
+            input: messages,
+          }),
+        });
+
+        hideTyping();
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error?.message || `API error: ${response.status}`);
+        }
+
+        const data = await response.json();
+
+        // Extract response from xAI format
+        assistantMessage = "";
+        if (data.output) {
+          for (const item of data.output) {
+            if (item.type === "message" && item.content) {
+              for (const contentItem of item.content) {
+                if (contentItem.type === "output_text" || contentItem.type === "text") {
+                  assistantMessage += contentItem.text;
+                }
+              }
+            }
+          }
+        }
+        if (!assistantMessage && data.choices?.[0]?.message?.content) {
+          assistantMessage = data.choices[0].message.content;
+        }
+      } else {
+        // Production: use serverless API route
+        const response = await fetch(CHAT_API_URL, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ messages }),
+        });
+
+        hideTyping();
+
+        const data = await response.json();
+
+        if (!response.ok) {
+          throw new Error(data.error || `API error: ${response.status}`);
+        }
+
+        assistantMessage = data.message;
+      }
+
+      assistantMessage = assistantMessage || "I apologize, but I couldn't generate a response.";
+
+      conversationHistory.push({ role: "assistant", content: assistantMessage });
+      addMessage(assistantMessage, "assistant");
+    } catch (error) {
+      hideTyping();
+      console.error("Chat error:", error);
+      addMessage(
+        `Sorry, there was an error: ${error.message}. Please try again.`,
+        "assistant",
+        true
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  form.addEventListener("submit", (e) => {
+    e.preventDefault();
+    const message = input.value.trim();
+    if (message) {
+      sendMessage(message);
+      input.value = "";
+    }
+  });
+}
+
+setupBillChat();
