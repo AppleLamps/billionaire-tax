@@ -1,0 +1,149 @@
+/* Layout styles: Grid, hero, main structure */
+
+.controls {
+  position: fixed;
+  top: max(24px, env(safe-area-inset-top, 0px));
+  right: max(24px, env(safe-area-inset-right, 0px));
+  z-index: 100;
+  display: flex;
+  gap: 12px;
+}
+
+.theme-toggle {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  color: var(--ink);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: var(--shadow);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  padding: 0;
+}
+
+.theme-toggle:hover {
+  transform: translateY(-1px);
+}
+
+.theme-icon {
+  display: none;
+}
+
+[data-theme="light"] .theme-icon.moon,
+[data-theme="dark"] .theme-icon.sun {
+  display: block;
+}
+
+/* Default state logic: show moon if auto system or explicitly light */
+:root:not([data-theme="dark"]) .theme-icon.moon {
+  display: block;
+}
+
+:root[data-theme="dark"] .theme-icon.moon {
+  display: none;
+}
+
+.progress-bar {
+  position: fixed;
+  top: env(safe-area-inset-top, 0px);
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: transparent;
+  z-index: 200;
+}
+
+.progress-fill {
+  height: 100%;
+  width: 0%;
+  background: var(--accent);
+  transition: width 0.1s linear;
+  will-change: width;
+  transform: translateZ(0);
+}
+
+.backdrop {
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 85% 15%, var(--accent-soft), transparent 60%),
+    radial-gradient(circle at 15% 55%, rgba(27, 76, 91, 0.03), transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.hero {
+  position: relative;
+  z-index: 1;
+  padding: 32px 6vw 16px;
+}
+
+.hero-inner {
+  max-width: var(--content-max);
+  margin: 0 auto;
+}
+
+.eyebrow {
+  font-family: "IBM Plex Mono", monospace;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin: 0 0 10px;
+}
+
+.hero-text h1 {
+  font-family: "Fraunces", serif;
+  font-size: clamp(2.2rem, 3.4vw, 3rem);
+  margin: 0;
+  line-height: 1.05;
+}
+
+.hero-credit {
+  margin: 12px 0 0;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+}
+
+.hero-credit a {
+  color: var(--ink);
+  text-decoration: none;
+  border-bottom: 1px solid var(--line);
+  padding-bottom: 2px;
+}
+
+.hero-credit a:hover {
+  color: var(--primary);
+  border-color: var(--primary);
+}
+
+.layout {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(220px, 1fr) minmax(0, 3fr);
+  gap: 40px;
+  padding: 24px 6vw 24px;
+  max-width: var(--content-max);
+  margin: 0 auto;
+  height: 100%;
+  min-height: 0;
+  align-items: stretch;
+}
+
+.site-footer {
+  padding: 32px 6vw 48px;
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  max-width: var(--content-max);
+  margin: 0 auto;
+}

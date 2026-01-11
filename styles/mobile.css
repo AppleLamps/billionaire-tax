@@ -1,0 +1,320 @@
+/* Mobile styles with collapsible TOC drawer */
+
+/* Mobile TOC Toggle Button - Hidden on desktop */
+.toc-toggle {
+  display: none;
+}
+
+/* TOC Overlay backdrop - Hidden by default */
+.toc-overlay {
+  display: none;
+}
+
+@media (max-width: 960px) {
+  .layout {
+    grid-template-columns: minmax(200px, 280px) minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .toc-inner {
+    max-height: calc(100vh - 80px);
+  }
+}
+
+@media (max-width: 768px) {
+  /* Mobile TOC Toggle Button */
+  .toc-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--paper);
+    border: 1px solid var(--line);
+    color: var(--muted);
+    font-family: "IBM Plex Mono", monospace;
+    font-size: 0.75rem;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    padding: 12px 16px;
+    min-height: 44px;
+    border-radius: 999px;
+    cursor: pointer;
+    box-shadow: var(--shadow);
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    white-space: nowrap;
+  }
+
+  .toc-toggle:hover,
+  .toc-toggle:active {
+    color: var(--ink);
+    border-color: var(--primary);
+    background: var(--accent-soft);
+  }
+
+  .toc-toggle-icon {
+    width: 16px;
+    height: 16px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 3px;
+  }
+
+  .toc-toggle-icon span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: currentColor;
+    border-radius: 1px;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+  }
+
+  /* Hamburger to X animation when open */
+  .toc-toggle[aria-expanded="true"] .toc-toggle-icon span:nth-child(1) {
+    transform: translateY(5px) rotate(45deg);
+  }
+
+  .toc-toggle[aria-expanded="true"] .toc-toggle-icon span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .toc-toggle[aria-expanded="true"] .toc-toggle-icon span:nth-child(3) {
+    transform: translateY(-5px) rotate(-45deg);
+  }
+
+  /* TOC Overlay backdrop */
+  .toc-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 90;
+  }
+
+  .toc-overlay.is-visible {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Layout changes */
+  .layout {
+    grid-template-columns: 1fr;
+    grid-template-rows: minmax(0, 1fr);
+    gap: 0;
+  }
+
+  /* Hide TOC by default on mobile - it becomes a slide-out drawer */
+  .toc {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    z-index: 100;
+    transform: translateX(-100%);
+    transition: transform 0.3s ease;
+    padding: 0;
+  }
+
+  .toc.is-open {
+    transform: translateX(0);
+  }
+
+  .toc-inner {
+    position: relative;
+    top: 0;
+    height: 100%;
+    max-height: 100%;
+    border-radius: 0;
+    border-left: none;
+    border-top: none;
+    border-bottom: none;
+    padding: 24px 20px;
+    padding-top: calc(24px + env(safe-area-inset-top, 0px));
+  }
+
+  .toc h2 {
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: none;
+  }
+
+  /* Show close button on mobile */
+  .toc-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    background: transparent;
+    border: 1px solid var(--line);
+    border-radius: 50%;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+    flex-shrink: 0;
+    margin-left: auto;
+  }
+
+  .toc-close:hover {
+    color: var(--ink);
+    border-color: var(--primary);
+    background: var(--accent-soft);
+  }
+
+  .toc-close svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  /* Hide decorative timeline on mobile */
+  .toc ol::before {
+    display: none;
+  }
+
+  .toc li {
+    padding-left: 0;
+  }
+
+  .toc a::before {
+    display: none;
+  }
+
+  .toc a::after {
+    display: none;
+  }
+
+  .toc a {
+    padding: 14px 16px;
+  }
+
+  /* Bill section takes full space */
+  .bill {
+    border-radius: 16px;
+    height: 100%;
+  }
+
+  .bill-actions {
+    width: 100%;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .highlight-drawer {
+    width: auto;
+    flex: 0 0 auto;
+  }
+
+  .highlight-drawer summary {
+    width: auto;
+  }
+
+  .highlight-list {
+    position: fixed;
+    top: auto;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    max-height: 50vh;
+    margin-top: 0;
+    border-radius: 18px 18px 0 0;
+    z-index: 200;
+  }
+
+  /* Prevent body scroll when drawer is open */
+  body.toc-drawer-open {
+    overflow: hidden;
+  }
+}
+
+@media (max-width: 640px) {
+  .hero {
+    padding-top: 48px;
+  }
+
+  .layout {
+    gap: 0;
+    padding: 16px 4vw;
+  }
+
+  .bill {
+    padding: 24px 16px;
+    border-radius: 16px;
+  }
+
+  .bill-header {
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+  }
+
+  .bill-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .bill-content h2,
+  .bill-content h3,
+  .bill-content h4 {
+    padding-left: 12px;
+    margin: 20px 0 4px;
+    scroll-margin-top: 60px;
+  }
+
+  .bill-content h2 {
+    font-size: 1.4rem;
+  }
+
+  .bill-content h3 {
+    font-size: 1.15rem;
+  }
+
+  .bill-content p {
+    font-size: 1rem;
+  }
+
+  .ghost-button {
+    padding: 14px 24px;
+    font-size: 0.8rem;
+  }
+
+  .highlight-drawer summary {
+    padding: 14px 24px;
+    font-size: 0.8rem;
+  }
+
+  .eyebrow {
+    font-size: 0.8rem;
+  }
+
+  .toc h2 {
+    font-size: 0.75rem;
+  }
+
+  .highlight-meta {
+    font-size: 0.7rem;
+  }
+
+  .toc-toggle {
+    font-size: 0.7rem;
+    padding: 10px 14px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 500px) {
+  .toc {
+    width: min(280px, 60vw);
+  }
+
+  .toc-inner {
+    padding: 16px;
+  }
+}
