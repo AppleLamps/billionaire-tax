@@ -15,3 +15,5 @@ build/
 # Vercel
 .vercel/
 
+
+.vercel

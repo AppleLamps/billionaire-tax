@@ -1435,8 +1435,8 @@ body {
   position: fixed;
   bottom: max(96px, calc(env(safe-area-inset-bottom, 0px) + 72px));
   right: max(24px, env(safe-area-inset-right, 0px));
-  width: min(420px, calc(100vw - 48px));
-  height: min(600px, calc(100vh - 140px));
+  width: min(560px, calc(100vw - 48px));
+  height: min(720px, calc(100vh - 140px));
   background: var(--paper);
   border: 1px solid var(--line);
   border-radius: var(--radius-card);
@@ -1589,6 +1589,28 @@ body {
   border: 1px solid var(--line);
   border-bottom-left-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+/* Streaming cursor animation */
+#streaming-message::after {
+  content: "▋";
+  display: inline;
+  animation: streamingCursor 0.8s infinite;
+  color: var(--accent);
+  margin-left: 2px;
+}
+
+@keyframes streamingCursor {
+
+  0%,
+  50% {
+    opacity: 1;
+  }
+
+  51%,
+  100% {
+    opacity: 0;
+  }
 }
 
 .chat-message.assistant p {
@@ -1837,7 +1859,7 @@ body {
     bottom: max(80px, calc(env(safe-area-inset-bottom, 0px) + 64px));
     right: 12px;
     width: calc(100vw - 24px);
-    height: min(500px, calc(100vh - 120px));
+    height: min(600px, calc(100vh - 120px));
     border-radius: 20px;
   }
 

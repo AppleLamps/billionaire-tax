@@ -1,33 +1,48 @@
-// Vercel Serverless Function for Bill Chat
+// Vercel Serverless Function for Bill Chat with Streaming
 // This keeps the xAI API key secure on the server side
 
-export default async function handler(req, res) {
-    // CORS headers - set these first
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Methods", "POST, OPTIONS");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+export const config = {
+    runtime: "edge",
+};
+
+export default async function handler(req) {
+    // CORS headers
+    const corsHeaders = {
+        "Access-Control-Allow-Origin": "*",
+        "Access-Control-Allow-Methods": "POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type",
+    };
 
     // Handle CORS preflight
     if (req.method === "OPTIONS") {
-        return res.status(200).end();
+        return new Response(null, { status: 200, headers: corsHeaders });
     }
 
     // Only allow POST requests
     if (req.method !== "POST") {
-        return res.status(405).json({ error: "Method not allowed" });
+        return new Response(JSON.stringify({ error: "Method not allowed" }), {
+            status: 405,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
     }
 
     const apiKey = process.env.XAI_API_KEY;
 
     if (!apiKey) {
-        return res.status(500).json({ error: "API key not configured" });
+        return new Response(JSON.stringify({ error: "API key not configured" }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
     }
 
     try {
-        const { messages } = req.body;
+        const { messages } = await req.json();
 
         if (!messages || !Array.isArray(messages)) {
-            return res.status(400).json({ error: "Invalid request: messages array required" });
+            return new Response(JSON.stringify({ error: "Invalid request: messages array required" }), {
+                status: 400,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
+            });
         }
 
         const response = await fetch("https://api.x.ai/v1/responses", {
@@ -39,6 +54,7 @@ export default async function handler(req, res) {
             body: JSON.stringify({
                 model: "grok-4-1-fast",
                 input: messages,
+                stream: true,
                 tools: [
                     { type: "web_search" },
                     { type: "x_search" }
@@ -48,39 +64,75 @@ export default async function handler(req, res) {
 
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({}));
-            return res.status(response.status).json({
+            return new Response(JSON.stringify({
                 error: errorData.error?.message || `API error: ${response.status}`,
+            }), {
+                status: response.status,
+                headers: { ...corsHeaders, "Content-Type": "application/json" },
             });
         }
 
-        const data = await response.json();
+        // Stream the response
+        const encoder = new TextEncoder();
+        const decoder = new TextDecoder();
 
-        // Extract the assistant's response
-        let assistantMessage = "";
-        if (data.output) {
-            for (const item of data.output) {
-                if (item.type === "message" && item.content) {
-                    for (const contentItem of item.content) {
-                        if (contentItem.type === "output_text" || contentItem.type === "text") {
-                            assistantMessage += contentItem.text;
+        const stream = new ReadableStream({
+            async start(controller) {
+                const reader = response.body.getReader();
+
+                try {
+                    while (true) {
+                        const { done, value } = await reader.read();
+                        if (done) break;
+
+                        const chunk = decoder.decode(value, { stream: true });
+                        const lines = chunk.split("\n");
+
+                        for (const line of lines) {
+                            if (line.startsWith("data: ")) {
+                                const data = line.slice(6);
+                                if (data === "[DONE]") {
+                                    controller.enqueue(encoder.encode("data: [DONE]\n\n"));
+                                    continue;
+                                }
+
+                                try {
+                                    const parsed = JSON.parse(data);
+
+                                    // Handle xAI Responses API streaming format
+                                    if (parsed.type === "response.output_text.delta" && parsed.delta) {
+                                        controller.enqueue(encoder.encode(`data: ${JSON.stringify({ text: parsed.delta })}\n\n`));
+                                    }
+                                } catch (e) {
+                                    // Skip unparseable lines (empty lines, etc.)
+                                }
+                            }
                         }
                     }
+                } catch (error) {
+                    controller.error(error);
+                } finally {
+                    controller.close();
+                    reader.releaseLock();
                 }
-            }
-        }
+            },
+        });
 
-        if (!assistantMessage && data.choices?.[0]?.message?.content) {
-            assistantMessage = data.choices[0].message.content;
-        }
-
-        return res.status(200).json({
-            message: assistantMessage || "I apologize, but I couldn't generate a response.",
-            citations: data.citations || [],
+        return new Response(stream, {
+            headers: {
+                ...corsHeaders,
+                "Content-Type": "text/event-stream",
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+            },
         });
     } catch (error) {
         console.error("Chat API error:", error);
-        return res.status(500).json({
+        return new Response(JSON.stringify({
             error: error.message || "Internal server error",
+        }), {
+            status: 500,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
     }
 }

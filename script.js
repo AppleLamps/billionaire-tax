@@ -1,4 +1,4 @@
-const billPath = "billionaires tax.txt";
+const billPath = "billionaires-tax.txt";
 
 const contentEl = document.getElementById("bill-content");
 const tocList = document.getElementById("toc-list");
@@ -1078,6 +1078,7 @@ You have access to web_search and x_search tools. Use them to support your argum
 * **Cite the Bill:** When referencing the bill, cite the Section number from the text provided below.
 * **Be Direct:** Do not say "Some might argue..." Say "The text explicitly states..."
 * **Don't Just Summarize:** If a user asks "What does the bill do?", do not just list the tax rates. Explain that it *creates a parallel fiscal system* and *suspends due process*.
+* **No Full URLs:** NEVER include full URLs or links in your responses. Instead of citing "https://example.com/article", just reference the source by name (e.g., "according to a Cato Institute study" or "per ITEP research"). Keep responses clean and readable.
 
 ### FORMATTING GUIDELINES
 Your responses will be rendered with markdown. Use these features for clarity:
@@ -1228,15 +1229,42 @@ Use the bill text below as your primary evidence, and use your search tools to v
     const msg = document.createElement("div");
     msg.className = `chat-message ${role}${isError ? " error" : ""}`;
 
-    if (role === "assistant") {
+    if (role === "assistant" && content) {
       msg.innerHTML = parseMarkdown(content);
-    } else {
+    } else if (content) {
       msg.textContent = content;
     }
 
     messagesEl.appendChild(msg);
     messagesEl.scrollTop = messagesEl.scrollHeight;
     return msg;
+  };
+
+  // Create an empty assistant message for streaming
+  const createStreamingMessage = () => {
+    const msg = document.createElement("div");
+    msg.className = "chat-message assistant";
+    msg.id = "streaming-message";
+    messagesEl.appendChild(msg);
+    messagesEl.scrollTop = messagesEl.scrollHeight;
+    return msg;
+  };
+
+  // Update streaming message with new content
+  const updateStreamingMessage = (content) => {
+    const msg = document.getElementById("streaming-message");
+    if (msg) {
+      msg.innerHTML = parseMarkdown(content);
+      messagesEl.scrollTop = messagesEl.scrollHeight;
+    }
+  };
+
+  // Finalize streaming message
+  const finalizeStreamingMessage = () => {
+    const msg = document.getElementById("streaming-message");
+    if (msg) {
+      msg.removeAttribute("id");
+    }
   };
 
   const showTyping = () => {
@@ -1282,7 +1310,7 @@ Use the bill text below as your primary evidence, and use your search tools to v
         ...conversationHistory,
       ];
 
-      let assistantMessage;
+      let assistantMessage = "";
 
       // Local testing: call xAI directly (API key exposed - dev only!)
       if (isLocalhost && LOCAL_XAI_API_KEY) {
@@ -1295,6 +1323,7 @@ Use the bill text below as your primary evidence, and use your search tools to v
           body: JSON.stringify({
             model: "grok-4-1-fast",
             input: messages,
+            stream: true,
             tools: [
               { type: "web_search" },
               { type: "x_search" }
@@ -1309,26 +1338,42 @@ Use the bill text below as your primary evidence, and use your search tools to v
           throw new Error(errorData.error?.message || `API error: ${response.status}`);
         }
 
-        const data = await response.json();
+        // Create streaming message element
+        createStreamingMessage();
 
-        // Extract response from xAI format
-        assistantMessage = "";
-        if (data.output) {
-          for (const item of data.output) {
-            if (item.type === "message" && item.content) {
-              for (const contentItem of item.content) {
-                if (contentItem.type === "output_text" || contentItem.type === "text") {
-                  assistantMessage += contentItem.text;
+        // Process SSE stream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split("\n");
+
+          for (const line of lines) {
+            if (line.startsWith("data: ")) {
+              const data = line.slice(6);
+              if (data === "[DONE]") continue;
+
+              try {
+                const parsed = JSON.parse(data);
+                // Handle xAI streaming format
+                if (parsed.type === "content.delta" && parsed.delta) {
+                  assistantMessage += parsed.delta;
+                  updateStreamingMessage(assistantMessage);
                 }
+              } catch (e) {
+                // Skip unparseable lines
               }
             }
           }
         }
-        if (!assistantMessage && data.choices?.[0]?.message?.content) {
-          assistantMessage = data.choices[0].message.content;
-        }
+
+        finalizeStreamingMessage();
       } else {
-        // Production: use serverless API route
+        // Production: use serverless API route with streaming
         const response = await fetch(CHAT_API_URL, {
           method: "POST",
           headers: {
@@ -1339,19 +1384,57 @@ Use the bill text below as your primary evidence, and use your search tools to v
 
         hideTyping();
 
-        const data = await response.json();
-
         if (!response.ok) {
-          throw new Error(data.error || `API error: ${response.status}`);
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `API error: ${response.status}`);
         }
 
-        assistantMessage = data.message;
+        // Check if response is streaming (SSE)
+        const contentType = response.headers.get("content-type");
+        if (contentType?.includes("text/event-stream")) {
+          // Create streaming message element
+          createStreamingMessage();
+
+          // Process SSE stream
+          const reader = response.body.getReader();
+          const decoder = new TextDecoder();
+
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            const chunk = decoder.decode(value, { stream: true });
+            const lines = chunk.split("\n");
+
+            for (const line of lines) {
+              if (line.startsWith("data: ")) {
+                const data = line.slice(6);
+                if (data === "[DONE]") continue;
+
+                try {
+                  const parsed = JSON.parse(data);
+                  if (parsed.text) {
+                    assistantMessage += parsed.text;
+                    updateStreamingMessage(assistantMessage);
+                  }
+                } catch (e) {
+                  // Skip unparseable lines
+                }
+              }
+            }
+          }
+
+          finalizeStreamingMessage();
+        } else {
+          // Fallback to non-streaming response
+          const data = await response.json();
+          assistantMessage = data.message;
+          addMessage(assistantMessage, "assistant");
+        }
       }
 
       assistantMessage = assistantMessage || "I apologize, but I couldn't generate a response.";
-
       conversationHistory.push({ role: "assistant", content: assistantMessage });
-      addMessage(assistantMessage, "assistant");
     } catch (error) {
       hideTyping();
       console.error("Chat error:", error);
