@@ -137,10 +137,19 @@ Use the bill text below as your primary evidence, and use your search tools to v
 
         html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
 
-        html = html.replace(/^(\|.+\|)\n(\|[-:| ]+\|)\n((?:\|.+\|\n?)+)/gm, (match, header, separator, body) => {
-            const parseRow = (row) => row.split('|').filter(cell => cell.trim()).map(cell => cell.trim());
+        // Table parsing - more flexible pattern
+        html = html.replace(/(\|[^\n]+\|)\n(\|[-:\s|]+\|)\n((?:\|[^\n]+\|\n?)+)/g, (match, header, separator, body) => {
+            const parseRow = (row) => {
+                // Split by | but handle empty first/last from leading/trailing |
+                const cells = row.split('|');
+                // Remove empty first and last elements from leading/trailing pipes
+                if (cells[0].trim() === '') cells.shift();
+                if (cells[cells.length - 1].trim() === '') cells.pop();
+                return cells.map(cell => cell.trim());
+            };
+
             const headerCells = parseRow(header);
-            const bodyRows = body.trim().split('\n').map(parseRow);
+            const bodyRows = body.trim().split('\n').filter(row => row.includes('|')).map(parseRow);
 
             let table = '<table><thead><tr>';
             headerCells.forEach(cell => { table += `<th>${cell}</th>`; });
