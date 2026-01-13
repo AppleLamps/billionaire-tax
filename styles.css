@@ -1878,34 +1878,32 @@ body {
 .bill-tabs {
   display: flex;
   align-items: center;
-  gap: 4px;
-  background: var(--bg-deep);
-  padding: 4px;
-  border-radius: 12px;
-  border: 1px solid var(--line);
+  gap: 12px;
 }
 
 .bill-tab {
   font-family: "Fraunces", serif;
   font-size: 1.1rem;
   font-weight: 600;
-  padding: 10px 20px;
-  border: none;
-  background: transparent;
+  padding: 10px 24px;
+  border: 1px solid var(--line);
+  background: var(--bg-deep);
   color: var(--muted);
   cursor: pointer;
-  border-radius: 8px;
-  transition: color 0.2s ease, background 0.2s ease;
+  border-radius: 10px;
+  transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   white-space: nowrap;
 }
 
 .bill-tab:hover {
   color: var(--ink);
+  border-color: var(--primary);
 }
 
 .bill-tab.active {
   background: var(--paper);
   color: var(--primary);
+  border-color: var(--primary);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -2099,26 +2097,23 @@ body {
 /* ===== FAQ MOBILE STYLES ===== */
 @media (max-width: 768px) {
   .bill-tabs {
-    display: flex;
+    gap: 10px;
   }
 
   .bill-tab {
     font-size: 0.95rem;
-    padding: 8px 14px;
+    padding: 8px 16px;
   }
 }
 
 @media (max-width: 640px) {
   .bill-tabs {
-    width: 100%;
-    justify-content: stretch;
+    gap: 8px;
   }
 
   .bill-tab {
-    flex: 1;
     font-size: 0.9rem;
-    padding: 10px 12px;
-    text-align: center;
+    padding: 8px 14px;
   }
 
   .faq-content {
