@@ -182,7 +182,10 @@
     <section class="bill">
       <div class="bill-header">
         <div class="bill-header-row">
-          <h2>Bill Text</h2>
+          <div class="bill-tabs" role="tablist" aria-label="Content sections">
+            <button class="bill-tab active" role="tab" aria-selected="true" aria-controls="bill-content" id="tab-bill" data-tab="bill">Bill Text</button>
+            <button class="bill-tab" role="tab" aria-selected="false" aria-controls="faq-content" id="tab-faq" data-tab="faq">FAQ</button>
+          </div>
           <div class="bill-actions">
             <details class="highlight-drawer" id="highlight-drawer">
               <summary>Highlights</summary>
@@ -191,9 +194,9 @@
             <button class="ghost-button" id="clear-highlights" type="button">Clear highlights</button>
           </div>
         </div>
-        <p class="bill-note">Rendered directly from the source file for accuracy.</p>
+        <p class="bill-note" id="bill-note">Rendered directly from the source file for accuracy.</p>
       </div>
-      <article id="bill-content" class="bill-content">
+      <article id="bill-content" class="bill-content" role="tabpanel" aria-labelledby="tab-bill">
         <noscript>
           <p>November 24, 2025. Letter to Attorney General Rob Bonta re: Initiative No. 25-0024, the 2026 Billionaire
             Tax Act. The measure requests a circulating title and summary under Elections Code Section 9002(b) and lists
@@ -201,6 +204,71 @@
           <p>The 2026 Billionaire Tax Act: full text and amendments.</p>
         </noscript>
       </article>
+      <div id="faq-content" class="faq-content" role="tabpanel" aria-labelledby="tab-faq" hidden>
+        <div class="faq-intro">
+          <h2 class="faq-title">The Hidden Dangers of Initiative No. 25-0024</h2>
+          <p class="faq-subtitle">Frequently asked questions about the 2026 Billionaire Tax Act</p>
+        </div>
+        <div class="faq-list">
+          <details class="faq-item">
+            <summary class="faq-question">I'm not a billionaire. Why should I worry about a tax on the super-rich?</summary>
+            <div class="faq-answer">
+              <p>Because this isn't just a tax—it's a power grab that changes the rules for everyone. To target the wealthy, this Act creates a new government power to tax "unrealized gains"—money you haven't actually made yet, but which the government says your assets are worth.</p>
+              <p>Once the State establishes the legal machinery to tax "paper wealth" (like the rising value of a home or small business you haven't sold), there is no constitutional barrier preventing them from lowering the threshold later to tax the middle class. Furthermore, if billionaires flee the state to avoid this—as they have in other countries with wealth taxes—the state loses their massive income tax contributions, leaving middle-class taxpayers to fill the budget hole.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-question">The Act claims to fund healthcare and schools. Won't that help my family?</summary>
+            <div class="faq-answer">
+              <p>The text tells a different story. The Act creates a "Reserve Fund" that is permanently separate from the General Fund. Critically, it explicitly exempts this new revenue from Proposition 98 (which guarantees funding for public schools) and the "Gann Limit" (Article XIIIB), which caps wasteful government spending.</p>
+              <p>This creates a "shadow budget" of up to $25 billion a year that politicians can spend without the usual constitutional checks and balances. Even worse, the Legislature is allowed to cut existing funding for healthcare if they claim "documented caseload declines," meaning this new money could simply replace old money rather than adding to it.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-question">How does this affect small business owners and family farms?</summary>
+            <div class="faq-answer">
+              <p>This Act sets a dangerous precedent for valuing businesses. It empowers the Franchise Tax Board (FTB) to ignore the legal structure of a business and tax the "underlying assets" directly. It presumes that a private business is worth 7.5 times its annual book profits—a rigid formula that could wildly overvalue a struggling family company.</p>
+              <p>If this valuation method becomes the standard, small business owners could be forced to sell off parts of their company just to pay taxes on "profits" they haven't even taken home.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-question">Does this law respect due process and transparency?</summary>
+            <div class="faq-answer">
+              <p>No. It aggressively suspends your right to know what the government is doing. For two full years (until Jan 1, 2028), the Act suspends the Administrative Procedure Act (APA). The APA is the "check and balance" that requires agencies to hold public hearings and accept public comments before passing new regulations.</p>
+              <p>By suspending it, this Act gives unelected bureaucrats at the FTB a "blank check" to write complex tax rules in secret, with zero transparency or public input.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-question">If this law is unfair, can't we just challenge it in court?</summary>
+            <div class="faq-answer">
+              <p>The authors of this Act anticipated that and rigged the judicial system to protect themselves.</p>
+              <p><strong>Venue Fixing:</strong> You cannot file a lawsuit in your local court; you must go to Sacramento County Superior Court.</p>
+              <p><strong>60-Day Deadline:</strong> You only have 60 days after the election to file a challenge. If you miss that window, the tax is declared "incontestable" forever, even if it violates your rights later.</p>
+              <p><strong>Judicial Conscription:</strong> Most shockingly, the Act orders the courts to "reform" (rewrite) the law if it is found unconstitutional, rather than striking it down. This forces judges to act as legislators to keep the tax alive.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-question">What happens if a taxpayer can't pay the tax because their wealth is tied up in a business or property?</summary>
+            <div class="faq-answer">
+              <p>The Act offers a "deferral" option, but it functions like a predatory loan. You must sign a binding contract with the State and pay an annual "deferral charge" of 7.5% on the unpaid tax.</p>
+              <p>This acts like a high-interest mortgage owed to the government, compounding year after year, which could eventually force the liquidation of the business or estate just to pay the accumulated debt.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-question">Is this really a "one-time" tax?</summary>
+            <div class="faq-answer">
+              <p>History suggests otherwise. While the text says "one-time," the Act builds a massive, permanent administrative infrastructure to value and tax net worth. Once the government has hired the staff, written the rules, and built the computer systems to track your total assets, it is incredibly easy for a future legislature to simply pass a new bill making the tax annual or lowering the exemption to hit the upper-middle class.</p>
+              <p>The "one-time" label is likely a Trojan horse to get the mechanism installed.</p>
+            </div>
+          </details>
+          <details class="faq-item">
+            <summary class="faq-question">Does this invade my financial privacy?</summary>
+            <div class="faq-answer">
+              <p>Yes. The Act requires "certified appraisals" of personal assets like art, collectibles, and intellectual property. It forces taxpayers to disclose the minute details of their private financial lives to the FTB, creating a government registry of personal property that goes far beyond what is required for normal income taxes.</p>
+            </div>
+          </details>
+        </div>
+      </div>
     </section>
   </main>
 

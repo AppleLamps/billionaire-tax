@@ -7,6 +7,7 @@ import { setupTocHighlight, syncMobileToc } from './toc.js';
 import { setupTheme } from './theme.js';
 import { setupMobileDrawerBehavior, setupMobileSidebar } from './mobile.js';
 import { setupBillChat } from './chat.js';
+import { setupFaq } from './faq.js';
 
 // DOM Elements
 const contentEl = document.getElementById("bill-content");
@@ -148,6 +149,7 @@ function init() {
     setupMobileDrawerBehavior();
     setupMobileSidebar();
     setupBillChat();
+    setupFaq();
 }
 
 // Run initialization
