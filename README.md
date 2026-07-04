@@ -1,6 +1,6 @@
 # Billionaire Tax Act Viewer
 
-Single-page reader for the 2026 Billionaire Tax Act (Initiative No. 25-0024) with a fixed layout, scrollable bill panel, table of contents, and AI-powered chat assistant.
+Single-page reader for the 2026 Billionaire Tax Act (Initiative No. 25-0024) with a fixed layout, scrollable bill panel, table of contents, and AI-powered chat assistant...
 
 ## Features
 

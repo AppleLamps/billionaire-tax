@@ -2303,6 +2303,18 @@ body {
   .faq-modal-body {
     padding: 20px;
   }
+
+  .faq-modal-close {
+    width: 44px;
+    height: 44px;
+    background: var(--accent-soft);
+    color: var(--ink);
+  }
+
+  .faq-modal-close svg {
+    width: 28px;
+    height: 28px;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2325,5 +2337,24 @@ body {
 
   .faq-modal-body {
     padding: 16px;
+  }
+
+  .faq-modal-close {
+    width: 48px;
+    height: 48px;
+    background: var(--accent);
+    color: white;
+    border-radius: 50%;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  }
+
+  .faq-modal-close:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  .faq-modal-close svg {
+    width: 32px;
+    height: 32px;
   }
 }
