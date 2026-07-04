@@ -110,6 +110,12 @@ function createParagraph(text) {
     return element;
 }
 
+function isGeneratedDocumentImageReference(block) {
+    const src = block.src.trim();
+    const alt = block.alt.trim();
+    return /^img-\d+\.(jpe?g|png|gif|webp)$/i.test(src) && alt.toLowerCase() === src.toLowerCase();
+}
+
 export function renderBlocks(blocks, container, tocList, slugCounts, nextFallbackId, startOrder = 0) {
     let order = startOrder;
 
@@ -139,7 +145,7 @@ export function renderBlocks(blocks, container, tocList, slugCounts, nextFallbac
             }
         } else if (block.kind === "image") {
             // Skip images with unsafe URLs to prevent XSS
-            if (!isSafeUrl(block.src)) {
+            if (!isSafeUrl(block.src) || isGeneratedDocumentImageReference(block)) {
                 continue;
             }
             element = document.createElement("figure");
